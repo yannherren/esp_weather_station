@@ -1,8 +1,6 @@
 ## IDF Component Manager Manifest File
 dependencies:
-  esp32-dht11:
-    git: https://github.com/abdellah2288/esp32-dht11.git
-  esp32-bmp280:
+  bmx280:
     git: https://github.com/utkumaden/esp-idf-bmx280.git
   ## Required IDF version
   idf:

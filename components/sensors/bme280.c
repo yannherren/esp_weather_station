@@ -19,7 +19,7 @@ struct bme_sensor {
 };
 
 bme_sensor_t* bme280_init() {
-    bme_sensor_t* sensor_config = malloc(sizeof(bme_sensor_t));
+    bme_sensor_t* sensor = malloc(sizeof(bme_sensor_t));
 
     i2c_config_t i2c_config = {
         .mode = I2C_MODE_MASTER,
@@ -41,31 +41,31 @@ bme_sensor_t* bme280_init() {
         i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0)
     );
 
-    sensor_config->bmx280 = bmx280_create(I2C_NUM_0);
+    sensor->bmx280 = bmx280_create(I2C_NUM_0);
 
-    if (!sensor_config->bmx280) {
+    if (!sensor->bmx280) {
         ESP_LOGE(TAG, "Could not create bmp280 driver");
-        free(sensor_config);
+        free(sensor);
     }
 
     ESP_ERROR_CHECK(
-        bmx280_init(sensor_config->bmx280)
+        bmx280_init(sensor->bmx280)
     );
 
     ESP_ERROR_CHECK(
-        bmx280_configure(sensor_config->bmx280, &BMX280_DEFAULT_CONFIG)
+        bmx280_configure(sensor->bmx280, &BMX280_DEFAULT_CONFIG)
     );
 
-    return sensor_config;
+    return sensor;
 }
 
-void bme280_read_sensor_values(const bme_sensor_t* sensor_config, float* temperature, float* pressure, float* humidity) {
+void bme280_read_sensor_values(const bme_sensor_t* sensor, float* temperature, float* pressure, float* humidity) {
     ESP_ERROR_CHECK(
-        bmx280_setMode(sensor_config->bmx280, BMX280_MODE_FORCE)
+        bmx280_setMode(sensor->bmx280, BMX280_MODE_FORCE)
     );
     do {
         vTaskDelay(pdMS_TO_TICKS(1));
-    } while (bmx280_isSampling(sensor_config->bmx280));
+    } while (bmx280_isSampling(sensor->bmx280));
 
-    bmx280_readoutFloat(sensor_config->bmx280, temperature, pressure, humidity);
+    bmx280_readoutFloat(sensor->bmx280, temperature, pressure, humidity);
 }
