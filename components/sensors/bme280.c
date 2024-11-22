@@ -5,8 +5,7 @@
 #include "bme280.h"
 
 #include <esp_log.h>
-#include <driver/i2c.h>
-
+#include <driver/i2c_master.h>
 #include "bmx280.h"
 
 #define SDA_PIN GPIO_NUM_16

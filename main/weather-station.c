@@ -8,6 +8,10 @@
 #define DHT_PIN GPIO_NUM_4
 #define SENSOR_TYPE DHT_TYPE_DHT11
 
+void wifi_handle_connected() {
+    ESP_LOGI("WIFI", "YAY, connected!");
+}
+
 
 void app_main(void)
 {
@@ -23,5 +27,5 @@ void app_main(void)
     ESP_LOGI("BME280", "Humidity: %f", humidity);
 
     wifi_init();
-    // wifi_connect(wifi_handle_connected);
+    wifi_connect(wifi_handle_connected);
 }

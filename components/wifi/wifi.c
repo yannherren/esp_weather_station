@@ -3,10 +3,9 @@
 //
 
 #include "wifi.h"
-
 #include <esp_log.h>
-
 #include "esp_wifi.h"
+#include "sdkconfig.h"
 //
 // void wifi_handle_connected() {
 //     ESP_LOGI("WIFI", "YAY, connected!");
@@ -23,8 +22,8 @@ void wifi_init() {
 void wifi_connect(void (*event_handler)) {
     wifi_config_t config = {
         .sta = {
-            .ssid = "",
-            .password = ""
+            .ssid = CONFIG_WIFI_WRAPPER_SSID,
+            .password = CONFIG_WIFI_WRAPPER_PASSWORD
         }
     };
 

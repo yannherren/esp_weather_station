@@ -1,0 +1,15 @@
+menu "Wifi Wrapper Config"
+
+    config WIFI_WRAPPER_SSID
+        string "SSID"
+        default ""
+        help
+            WIFI SSID to connect to
+
+    config WIFI_WRAPPER_PASSWORD
+        string "Password"
+        default ""
+        help
+            Password for the WIFI connection
+
+endmenu
