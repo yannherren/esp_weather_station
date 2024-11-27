@@ -4,22 +4,20 @@
 
 #include "wifi.h"
 #include <esp_log.h>
+
 #include "esp_wifi.h"
 #include "sdkconfig.h"
-//
-// void wifi_handle_connected() {
-//     ESP_LOGI("WIFI", "YAY, connected!");
-// }
 
 void wifi_init() {
-    esp_event_loop_create_default();
+    ESP_ERROR_CHECK(esp_netif_init());
+    esp_netif_create_default_wifi_sta();
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(
         esp_wifi_init(&config)
     );
 }
 
-void wifi_connect(void (*event_handler)) {
+void wifi_connect() {
     wifi_config_t config = {
         .sta = {
             .ssid = CONFIG_WIFI_WRAPPER_SSID,
@@ -28,7 +26,7 @@ void wifi_connect(void (*event_handler)) {
     };
 
     ESP_ERROR_CHECK(
-        esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, event_handler, NULL)
+        esp_wifi_set_mode(WIFI_MODE_STA)
     );
 
     ESP_ERROR_CHECK(
@@ -38,7 +36,6 @@ void wifi_connect(void (*event_handler)) {
     ESP_ERROR_CHECK(
         esp_wifi_start()
     );
-
 
     ESP_ERROR_CHECK(
         esp_wifi_connect()

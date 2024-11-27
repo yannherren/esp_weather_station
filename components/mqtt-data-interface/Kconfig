@@ -1,0 +1,27 @@
+menu "MQTT Client Config"
+
+    config MQTT_BROKER_URI
+        string "MQTT broker URI"
+        default ""
+        help
+            MQTT Broker URI
+
+    config MQTT_USER
+        string "MQTT user"
+        default ""
+        help
+            MQTT user
+
+    config MQTT_CLIENT_ID
+        string "MQTT client id"
+        default ""
+        help
+            MQTT client id
+
+    config MQTT_PASSWORD
+        string "MQTT password"
+        default ""
+        help
+            MQTT password
+
+endmenu
