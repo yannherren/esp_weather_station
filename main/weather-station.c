@@ -13,12 +13,14 @@
 
 ESP_EVENT_DECLARE_BASE(MQTT_EVENT);
 
-void app_mqtt_client_changed(void* event_handler_arg,
-                                        esp_event_base_t event_base,
-                                        int32_t event_id,
-                                        void* event_data) {
+void app_connection_changed(void* event_handler_arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    if (event_id == IP_EVENT_STA_GOT_IP) {
+        data_init();
+    }
+}
+
+void app_mqtt_client_changed(void* event_handler_arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_id == MQTT_EVENT_CONNECTED) {
-        ESP_LOGI("MQTT", "LOGGGGG!!!!!");
         esp_mqtt_event_handle_t event = event_data;
         esp_mqtt_client_handle_t* client = &event->client;
 
@@ -27,22 +29,11 @@ void app_mqtt_client_changed(void* event_handler_arg,
         bme280_read_sensor_values(sensor, &temperature, &pressure, &humidity);
 
         data_store(*client, TEMPERATURE, temperature);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        data_store(*client, HUMIDITY, humidity);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        data_store(*client, PRESSURE, pressure);
     }
-}
-
-
-
-void app_connection_changed(void* event_handler_arg,
-                                        esp_event_base_t event_base,
-                                        int32_t event_id,
-                                        void* event_data) {
-    if (event_id == IP_EVENT_STA_GOT_IP) {
-        ESP_LOGI("CONNECTION", "GOT IP!");
-        esp_mqtt_client_handle_t client = data_init();
-        data_register_event(client, &app_mqtt_client_changed);
-        data_client_start(client);
-    }
-
 }
 
 
@@ -53,15 +44,7 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &app_connection_changed, NULL, NULL);
-    //
-    // float temperature, pressure, humidity = 0;
-    //
-    // const bme_sensor_t* sensor = bme280_init();
-    // bme280_read_sensor_values(sensor, &temperature, &pressure, &humidity);
-    //
-    // ESP_LOGI("BME280", "Temperature: %f", temperature);
-    // ESP_LOGI("BME280", "Pressure: %f", pressure);
-    // ESP_LOGI("BME280", "Humidity: %f", humidity);
+    esp_event_handler_instance_register(MQTT_EVENT, ESP_EVENT_ANY_ID, &app_mqtt_client_changed, NULL, NULL);
 
     wifi_init();
     wifi_connect();

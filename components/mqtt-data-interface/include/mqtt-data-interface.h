@@ -15,12 +15,7 @@ typedef enum {
     TVOC = 6
 } DATA_TYPE ;
 
-esp_mqtt_client_handle_t data_init();
-void data_register_event(esp_mqtt_client_handle_t client, void (*event_handler) (void* event_handler_arg,
-                                        esp_event_base_t event_base,
-                                        int32_t event_id,
-                                        void* event_data));
-void data_client_start(esp_mqtt_client_handle_t client);
+void data_init();
 void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value);
 void data_store_bulk(float value[]);
 
