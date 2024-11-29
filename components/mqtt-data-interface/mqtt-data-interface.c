@@ -48,5 +48,8 @@ void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value) {
     ESP_LOGI(DATA_TAG, "Stored data in field %i: %.2lf", type, value);
 }
 
-void data_store_bulk(float value[]) {
+void data_store_bulk(esp_mqtt_client_handle_t client, sensor_data_t data) {
+    data_store(client, TEMPERATURE, data.temperature);
+    data_store(client, HUMIDITY, data.humidity);
+    data_store(client, PRESSURE, data.pressure);
 }

@@ -6,6 +6,7 @@
 #include "driver/gpio.h"
 #include "bme280.h"
 #include "mqtt-data-interface.h"
+#include "sensor-readings.h"
 #include "wifi.h"
 
 #define DHT_PIN GPIO_NUM_4
@@ -22,17 +23,10 @@ void app_connection_changed(void* event_handler_arg, esp_event_base_t event_base
 void app_mqtt_client_changed(void* event_handler_arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_id == MQTT_EVENT_CONNECTED) {
         esp_mqtt_event_handle_t event = event_data;
-        esp_mqtt_client_handle_t* client = &event->client;
+        esp_mqtt_client_handle_t client = event->client;
 
-        float temperature, pressure, humidity = 0;
-        const bme_sensor_t* sensor = bme280_init();
-        bme280_read_sensor_values(sensor, &temperature, &pressure, &humidity);
-
-        data_store(*client, TEMPERATURE, temperature);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        data_store(*client, HUMIDITY, humidity);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        data_store(*client, PRESSURE, pressure);
+        sensor_data_t data = sensors_read_all();
+        data_store_bulk(client, data);
     }
 }
 
@@ -48,6 +42,4 @@ void app_main(void)
 
     wifi_init();
     wifi_connect();
-
-
 }
