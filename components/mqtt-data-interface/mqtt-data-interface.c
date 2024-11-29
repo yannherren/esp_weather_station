@@ -34,13 +34,15 @@ void data_init() {
 }
 
 void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value) {
-    char topicBuffer[40];
-    sniprintf(topicBuffer, sizeof(topicBuffer), "channels/2759051/publish/fields/field%i", type);
-    char dataBuffer[64];
-    snprintf(dataBuffer, sizeof(dataBuffer), "%.2lf", value);
+    char topic_buffer[40];
+    sniprintf(topic_buffer, sizeof(topic_buffer), "channels/2759051/publish/fields/field%i", type);
+
+    int buffer_size = snprintf(NULL, 0, "%.2lf", value);
+    char data_buffer[buffer_size + 1];
+    snprintf(data_buffer, sizeof(data_buffer), "%.2lf", value);
 
     ESP_ERROR_CHECK(
-        esp_mqtt_client_publish(client, topicBuffer, dataBuffer, sizeof(dataBuffer), 0, 0)
+        esp_mqtt_client_publish(client, topic_buffer, data_buffer, sizeof(data_buffer) - 1, 0, 0)
     );
 
     vTaskDelay(1000 / portTICK_PERIOD_MS); // BUG: mqtt loses events if they are fired to quickly, qos is not available on thingspeak
@@ -48,8 +50,38 @@ void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value) {
     ESP_LOGI(DATA_TAG, "Stored data in field %i: %.2lf", type, value);
 }
 
-void data_store_bulk(esp_mqtt_client_handle_t client, sensor_data_t data) {
-    data_store(client, TEMPERATURE, data.temperature);
-    data_store(client, HUMIDITY, data.humidity);
-    data_store(client, PRESSURE, data.pressure);
+void format_payload(char **payload, sensor_data_t data) {
+    char payload_format[] = "field%i=%.2lf&field%i=%.2lf&field%i=%.2lf";
+
+    int buffer_size = snprintf(NULL, 0, payload_format,
+        TEMPERATURE, data.temperature,
+        HUMIDITY, data.humidity,
+        PRESSURE, data.pressure
+    );
+
+    *payload = malloc(buffer_size + 1);
+
+    snprintf(*payload, buffer_size + 1, payload_format,
+        TEMPERATURE, data.temperature,
+        HUMIDITY, data.humidity,
+        PRESSURE, data.pressure
+    );
 }
+
+void data_store_bulk(esp_mqtt_client_handle_t client, sensor_data_t data) {
+    char topic[] = "channels/2759051/publish";
+    char *payload = NULL;
+    format_payload(&payload, data);
+
+    ESP_LOGI(DATA_TAG, "%s", payload);
+
+    ESP_ERROR_CHECK(
+        esp_mqtt_client_publish(client, topic, payload, strlen(payload), 0, 0)
+    );
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    free(payload);
+
+    ESP_LOGI(DATA_TAG, "Stored bulk data");
+}
+

@@ -42,7 +42,13 @@ void wifi_connect() {
     );
 }
 
-void wifi_disconnect() {
+void wifi_stop() {
+    ESP_ERROR_CHECK(
+        esp_wifi_disconnect()
+    );
+    ESP_ERROR_CHECK(
+        esp_wifi_stop()
+    );
     ESP_ERROR_CHECK(
         esp_wifi_deinit()
     );

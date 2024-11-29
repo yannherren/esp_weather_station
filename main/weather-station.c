@@ -4,8 +4,8 @@
 #include <nvs_flash.h>
 
 #include "driver/gpio.h"
-#include "bme280.h"
 #include "mqtt-data-interface.h"
+#include "power-management.h"
 #include "sensor-readings.h"
 #include "wifi.h"
 
@@ -27,6 +27,8 @@ void app_mqtt_client_changed(void* event_handler_arg, esp_event_base_t event_bas
 
         sensor_data_t data = sensors_read_all();
         data_store_bulk(client, data);
+
+        power_management_sleep_and_wakeup();
     }
 }
 

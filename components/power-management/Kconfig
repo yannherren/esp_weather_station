@@ -1,0 +1,9 @@
+menu "Power Management Config"
+
+    config POWER_MANAGEMENT_SLEEP_INTERVAL
+        int "Sleep interval (seconds)"
+        default 3600
+        help
+            Go to deep sleep for the defined amount of seconds
+
+endmenu

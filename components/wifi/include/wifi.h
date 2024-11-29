@@ -7,6 +7,6 @@
 
 void wifi_init();
 void wifi_connect();
-void wifi_disconnect();
+void wifi_stop();
 
 #endif //WIFI_H
