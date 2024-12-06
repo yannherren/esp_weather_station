@@ -24,7 +24,6 @@ esp_err_t bme280_load_chip_id(uint8_t *chip_id) {
     i2c_master_write_to_device(I2C_PORT, BME_ADDRESS, &reg_addr, 1, DEFAULT_TIMEOUT);
     esp_err_t err = i2c_master_read_from_device(I2C_PORT, BME_ADDRESS, &bme_chip_id, 1, DEFAULT_TIMEOUT);
 
-    ESP_LOG_BUFFER_HEX(TAG, &bme_chip_id, 1);
     if (bme_chip_id != BME_CHIP_ID) {
         esp_err_to_name(err);
         return err;
@@ -178,8 +177,6 @@ double bme280_compensate_humidity(calibration_data_t *calibration_data, int32_t 
                                      (1.0 + (double) calibration_data->dig_H3 / 67108864.0 * var_H)));
     var_H = var_H * (1.0 - (double) calibration_data->dig_H1 * var_H / 524288.0);
 
-    ESP_LOGI(TAG, "Test: %lf", var_H);
-
     if (var_H > 100.0)
         var_H = 100.0;
     else if (var_H < 0.0)
@@ -190,7 +187,6 @@ double bme280_compensate_humidity(calibration_data_t *calibration_data, int32_t 
 void bme280_read_data(double *temperature, double *pressure, double *humidity) {
     uint8_t raw_data[8]; // Register 0xF7 to 0xFE
     bme280_read_raw_data(raw_data, 0xF7, sizeof(raw_data));
-    ESP_LOG_BUFFER_HEX(TAG, &raw_data[6], 2);
 
     calibration_data_t calibration_data = {};
     bme280_load_calibration_data(&calibration_data);
