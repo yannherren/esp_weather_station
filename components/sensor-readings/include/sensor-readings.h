@@ -7,9 +7,9 @@
 
 
 typedef struct {
-    float temperature;
-    float humidity;
-    float pressure;
+    double temperature;
+    double humidity;
+    double pressure;
 } sensor_data_t ;
 
 sensor_data_t sensors_read_all();

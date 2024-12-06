@@ -4,10 +4,12 @@
 
 #ifndef BMP280_H
 #define BMP280_H
+#include <esp_err.h>
 
 typedef struct bme_sensor bme_sensor_t;
 
-bme_sensor_t* bme280_init();
-void bme280_read_sensor_values(const bme_sensor_t* sensor, float* temperature, float* pressure, float* humidity);
+esp_err_t bme280_init();
+void bme280_configure();
+void bme280_read_data(double *temperature, double *pressure, double *humidity);
 
 #endif //BMP280_H

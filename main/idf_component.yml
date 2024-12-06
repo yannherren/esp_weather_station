@@ -1,7 +1,5 @@
 ## IDF Component Manager Manifest File
 dependencies:
-  bmx280:
-    git: https://github.com/utkumaden/esp-idf-bmx280.git
   ## Required IDF version
   idf:
     version: ">=4.1.0"

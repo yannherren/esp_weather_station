@@ -16,8 +16,10 @@ sensor_data_t sensors_read_all() {
         .humidity = 0,
         .pressure = 0,
     };
-    const bme_sensor_t* sensor = bme280_init();
-    bme280_read_sensor_values(sensor, &data.temperature, &data.pressure, &data.humidity);
+    bme280_init();
+    bme280_configure();
+    bme280_read_data(&data.temperature, &data.pressure, &data.humidity);
+
 
     return data;
 }

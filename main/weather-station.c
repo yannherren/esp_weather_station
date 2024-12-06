@@ -9,8 +9,6 @@
 #include "sensor-readings.h"
 #include "wifi.h"
 
-#define DHT_PIN GPIO_NUM_4
-#define SENSOR_TYPE DHT_TYPE_DHT11
 
 ESP_EVENT_DECLARE_BASE(MQTT_EVENT);
 
