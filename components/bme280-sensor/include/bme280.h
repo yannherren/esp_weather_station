@@ -8,8 +8,8 @@
 
 typedef struct bme_sensor bme_sensor_t;
 
-esp_err_t bme280_init();
-void bme280_configure();
+esp_err_t bme280_init(void);
+void bme280_configure(void);
 void bme280_read_data(double *temperature, double *pressure, double *humidity);
 
 #endif //BMP280_H

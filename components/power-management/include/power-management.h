@@ -5,6 +5,6 @@
 #ifndef POWER_MANAGEMENT_H
 #define POWER_MANAGEMENT_H
 
-void power_management_sleep_and_wakeup();
+void power_management_sleep_and_wakeup(void);
 
 #endif //POWER_MANAGEMENT_H

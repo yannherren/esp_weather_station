@@ -12,7 +12,7 @@
 
 #define POWER_MANAGEMENT_TAG "POWER MANAGEMENT"
 
-void power_management_sleep_and_wakeup() {
+void power_management_sleep_and_wakeup(void) {
     wifi_stop();
     const int wakeup_interval = CONFIG_POWER_MANAGEMENT_SLEEP_INTERVAL;
     ESP_LOGI(POWER_MANAGEMENT_TAG, "Entering sleep for %i seconds", wakeup_interval);

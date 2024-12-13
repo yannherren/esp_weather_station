@@ -12,6 +12,6 @@ typedef struct {
     double pressure;
 } sensor_data_t ;
 
-sensor_data_t sensors_read_all();
+sensor_data_t sensors_read_all(void);
 
 #endif //SENSOR_READINGS_H

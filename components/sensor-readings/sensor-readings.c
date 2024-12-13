@@ -10,7 +10,7 @@
 
 ESP_EVENT_DEFINE_BASE(SENSOR_READING);
 
-sensor_data_t sensors_read_all() {
+sensor_data_t sensors_read_all(void) {
     sensor_data_t data = {
         .temperature = 0,
         .humidity = 0,

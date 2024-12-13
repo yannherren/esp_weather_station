@@ -8,7 +8,7 @@
 #include "esp_wifi.h"
 #include "sdkconfig.h"
 
-void wifi_init() {
+void wifi_init(void) {
     ESP_ERROR_CHECK(esp_netif_init());
     esp_netif_create_default_wifi_sta();
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
@@ -17,7 +17,7 @@ void wifi_init() {
     );
 }
 
-void wifi_connect() {
+void wifi_connect(void) {
     wifi_config_t config = {
         .sta = {
             .ssid = CONFIG_WIFI_WRAPPER_SSID,
@@ -42,7 +42,7 @@ void wifi_connect() {
     );
 }
 
-void wifi_stop() {
+void wifi_stop(void) {
     ESP_ERROR_CHECK(
         esp_wifi_disconnect()
     );

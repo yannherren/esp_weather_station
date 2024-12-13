@@ -3,6 +3,7 @@
 //
 
 #include "mqtt-data-interface.h"
+#include "mqtt-data-interface_private.h"
 
 #include <esp_log.h>
 
@@ -17,7 +18,7 @@ void data_forward_handle(void *handler_args, esp_event_base_t base, int32_t even
     esp_event_post(MQTT_EVENT, event_id, event_data, sizeof(esp_mqtt_event_t), portMAX_DELAY);
 }
 
-void data_init() {
+void data_init(void) {
     const esp_mqtt_client_config_t config = {
         .broker.address.uri = CONFIG_MQTT_BROKER_URI,
         .credentials.username = CONFIG_MQTT_USER,
@@ -50,24 +51,6 @@ void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value) {
     ESP_LOGI(DATA_TAG, "Stored data in field %i: %.2lf", type, value);
 }
 
-void format_payload(char **payload, sensor_data_t data) {
-    char payload_format[] = "field%i=%.2lf&field%i=%.2lf&field%i=%.2lf";
-
-    int buffer_size = snprintf(NULL, 0, payload_format,
-        TEMPERATURE, data.temperature,
-        HUMIDITY, data.humidity,
-        PRESSURE, data.pressure
-    );
-
-    *payload = malloc(buffer_size + 1);
-
-    snprintf(*payload, buffer_size + 1, payload_format,
-        TEMPERATURE, data.temperature,
-        HUMIDITY, data.humidity,
-        PRESSURE, data.pressure
-    );
-}
-
 void data_store_bulk(esp_mqtt_client_handle_t client, sensor_data_t data) {
     char topic[] = "channels/2759051/publish";
     char *payload = NULL;
@@ -85,3 +68,20 @@ void data_store_bulk(esp_mqtt_client_handle_t client, sensor_data_t data) {
     ESP_LOGI(DATA_TAG, "Stored bulk data");
 }
 
+static void format_payload(char **payload, sensor_data_t data) {
+    char payload_format[] = "field%i=%.2lf&field%i=%.2lf&field%i=%.2lf";
+
+    int buffer_size = snprintf(NULL, 0, payload_format,
+        TEMPERATURE, data.temperature,
+        HUMIDITY, data.humidity,
+        PRESSURE, data.pressure
+    );
+
+    *payload = malloc(buffer_size + 1);
+
+    snprintf(*payload, buffer_size + 1, payload_format,
+        TEMPERATURE, data.temperature,
+        HUMIDITY, data.humidity,
+        PRESSURE, data.pressure
+    );
+}

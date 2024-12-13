@@ -18,24 +18,7 @@
 #define BME_CHIP_ID 0x60
 #define DEFAULT_TIMEOUT pdMS_TO_TICKS(1000)
 
-esp_err_t bme280_load_chip_id(uint8_t *chip_id) {
-    uint8_t reg_addr = 0xD0;
-    uint8_t bme_chip_id = 0;
-    i2c_master_write_to_device(I2C_PORT, BME_ADDRESS, &reg_addr, 1, DEFAULT_TIMEOUT);
-    esp_err_t err = i2c_master_read_from_device(I2C_PORT, BME_ADDRESS, &bme_chip_id, 1, DEFAULT_TIMEOUT);
-
-    if (bme_chip_id != BME_CHIP_ID) {
-        esp_err_to_name(err);
-        return err;
-    }
-
-    *chip_id = bme_chip_id;
-
-    return ESP_OK;
-}
-
-
-esp_err_t bme280_init() {
+esp_err_t bme280_init(void) {
     i2c_config_t i2c_config = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = SDA_PIN,
@@ -67,7 +50,7 @@ esp_err_t bme280_init() {
 }
 
 
-void bme280_configure() {
+void bme280_configure(void) {
     uint8_t ctrl_hum[2] = {0xF2, 0x01}; // Oversampling x 1 for humidity
     i2c_master_write_to_device(I2C_PORT, BME_ADDRESS, ctrl_hum, sizeof(ctrl_hum), DEFAULT_TIMEOUT);
 
@@ -75,14 +58,47 @@ void bme280_configure() {
     i2c_master_write_to_device(I2C_PORT, BME_ADDRESS, ctrl_meas, sizeof(ctrl_meas), DEFAULT_TIMEOUT);
 }
 
-void bme280_read_raw_data(uint8_t *data, uint8_t start_register, uint8_t len) {
+void bme280_read_data(double *temperature, double *pressure, double *humidity) {
+    uint8_t raw_data[8]; // Register 0xF7 to 0xFE
+    bme280_read_raw_data(raw_data, 0xF7, sizeof(raw_data));
+
+    calibration_data_t calibration_data = {};
+    bme280_load_calibration_data(&calibration_data);
+
+    int32_t adc_P = (int32_t) bme280_compose_pressure(raw_data);
+    int32_t adc_T = (int32_t) bme280_compose_temp(&raw_data[3]);
+    int32_t adc_H = (int32_t) bme280_compose_humidity(&raw_data[6]);
+
+    double t_fine = 0.0;
+    *temperature = bme280_compensate_temp(&calibration_data, adc_T, &t_fine);
+    *pressure = bme280_compensate_pressure(&calibration_data, adc_P, t_fine);
+    *humidity = bme280_compensate_humidity(&calibration_data, adc_H, t_fine);
+}
+
+static esp_err_t bme280_load_chip_id(uint8_t *chip_id) {
+    uint8_t reg_addr = 0xD0;
+    uint8_t bme_chip_id = 0;
+    i2c_master_write_to_device(I2C_PORT, BME_ADDRESS, &reg_addr, 1, DEFAULT_TIMEOUT);
+    esp_err_t err = i2c_master_read_from_device(I2C_PORT, BME_ADDRESS, &bme_chip_id, 1, DEFAULT_TIMEOUT);
+
+    if (bme_chip_id != BME_CHIP_ID) {
+        esp_err_to_name(err);
+        return err;
+    }
+
+    *chip_id = bme_chip_id;
+
+    return ESP_OK;
+}
+
+static void bme280_read_raw_data(uint8_t *data, uint8_t start_register, uint8_t len) {
     i2c_master_write_to_device(I2C_PORT, BME_ADDRESS, &start_register, 1, DEFAULT_TIMEOUT);
     ESP_ERROR_CHECK(
         i2c_master_read_from_device(I2C_PORT, BME_ADDRESS, data, len, pdMS_TO_TICKS(1000))
     );
 }
 
-void bme280_load_calibration_data(calibration_data_t *calibration_data) {
+static void bme280_load_calibration_data(calibration_data_t *calibration_data) {
     uint8_t len = 26; // 0x88 until register 0x9F
     uint8_t data[len];
     uint8_t start_register = 0x88;
@@ -116,19 +132,19 @@ void bme280_load_calibration_data(calibration_data_t *calibration_data) {
     calibration_data->dig_H6 = h_data[6];
 }
 
-uint32_t bme280_compose_temp(uint8_t *raw_data) {
+static uint32_t bme280_compose_temp(uint8_t *raw_data) {
     return raw_data[0] << 12 | raw_data[1] << 4 | raw_data[2] >> 4;
 }
 
-uint32_t bme280_compose_pressure(uint8_t *raw_data) {
+static uint32_t bme280_compose_pressure(uint8_t *raw_data) {
     return raw_data[0] << 12 | raw_data[1] << 4 | raw_data[2] >> 4;
 }
 
-uint32_t bme280_compose_humidity(uint8_t *raw_data) {
+static uint32_t bme280_compose_humidity(uint8_t *raw_data) {
     return raw_data[0] << 8 | raw_data[1];
 }
 
-double bme280_compensate_temp(calibration_data_t *calibration_data, int32_t adc_T, double *t_fine) {
+static double bme280_compensate_temp(calibration_data_t *calibration_data, int32_t adc_T, double *t_fine) {
     // Formulas for compensation can be found on: https://www.mouser.com/datasheet/2/783/BST-BME280-DS002-1509607.pdf
     double var1, var2, T;
     var1 = ((double) adc_T / 16384.0 - (double) calibration_data->dig_T1 / 1024.0) * (double) calibration_data->dig_T2;
@@ -145,7 +161,7 @@ double bme280_compensate_temp(calibration_data_t *calibration_data, int32_t adc_
     return T;
 }
 
-double bme280_compensate_pressure(calibration_data_t *calibration_data, int32_t adc_P, double t_fine) {
+static double bme280_compensate_pressure(calibration_data_t *calibration_data, int32_t adc_P, double t_fine) {
     // Formulas for compensation can be found on: https://www.mouser.com/datasheet/2/783/BST-BME280-DS002-1509607.pdf
     double var1, var2, p;
     var1 = t_fine / 2.0 - 64000.0;
@@ -166,7 +182,7 @@ double bme280_compensate_pressure(calibration_data_t *calibration_data, int32_t 
     return p;
 }
 
-double bme280_compensate_humidity(calibration_data_t *calibration_data, int32_t adc_H, double t_fine) {
+static double bme280_compensate_humidity(calibration_data_t *calibration_data, int32_t adc_H, double t_fine) {
     // Formulas for compensation can be found on: https://www.mouser.com/datasheet/2/783/BST-BME280-DS002-1509607.pdf
     double var_H;
     var_H = t_fine - 76800.0;
@@ -182,21 +198,4 @@ double bme280_compensate_humidity(calibration_data_t *calibration_data, int32_t 
     else if (var_H < 0.0)
         var_H = 0.0;
     return var_H;
-}
-
-void bme280_read_data(double *temperature, double *pressure, double *humidity) {
-    uint8_t raw_data[8]; // Register 0xF7 to 0xFE
-    bme280_read_raw_data(raw_data, 0xF7, sizeof(raw_data));
-
-    calibration_data_t calibration_data = {};
-    bme280_load_calibration_data(&calibration_data);
-
-    int32_t adc_P = (int32_t) bme280_compose_pressure(raw_data);
-    int32_t adc_T = (int32_t) bme280_compose_temp(&raw_data[3]);
-    int32_t adc_H = (int32_t) bme280_compose_humidity(&raw_data[6]);
-
-    double t_fine = 0.0;
-    *temperature = bme280_compensate_temp(&calibration_data, adc_T, &t_fine);
-    *pressure = bme280_compensate_pressure(&calibration_data, adc_P, t_fine);
-    *humidity = bme280_compensate_humidity(&calibration_data, adc_H, t_fine);
 }

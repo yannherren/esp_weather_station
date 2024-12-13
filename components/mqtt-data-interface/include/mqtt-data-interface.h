@@ -17,8 +17,7 @@ typedef enum {
     TVOC = 6
 } DATA_TYPE ;
 
-void data_init();
-void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value);
+void data_init(void);
 void data_store(esp_mqtt_client_handle_t client, DATA_TYPE type, double value);
 void data_store_bulk(esp_mqtt_client_handle_t client, sensor_data_t data);
 
